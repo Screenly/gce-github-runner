@@ -16,9 +16,6 @@ function safety_off {
 
 source "${ACTION_DIR}/vendor/getopts_long.sh"
 
-set -euo pipefail
-IFS=$'\t\n'
-
 command=
 token=
 project_id=
@@ -156,6 +153,10 @@ do
       ;;
   esac
 done
+
+set -euo pipefail
+IFS=$'\t\n'
+
 
 function gcloud_auth {
   # NOTE: when --project is specified, it updates the config
