@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-IFS=$'\t\n'
-
-ACTION_DIR="$( cd $( dirname "${BASH_SOURCE[0]}" ) >/dev/null 2>&1 && pwd )"
+ACTION_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function usage {
   echo "Usage: ${0} --command=[start|stop] <arguments>"
@@ -18,6 +15,9 @@ function safety_off {
 }
 
 source "${ACTION_DIR}/vendor/getopts_long.sh"
+
+set -euo pipefail
+IFS=$'\t\n'
 
 command=
 token=
@@ -159,7 +159,7 @@ done
 
 function gcloud_auth {
   # NOTE: when --project is specified, it updates the config
-  echo ${service_account_key} | gcloud --project  ${project_id} --quiet auth activate-service-account --key-file - &>/dev/null
+  echo "${service_account_key}" | gcloud --project  "${project_id}" --quiet auth activate-service-account --key-file - &>/dev/null
   echo "✅ Successfully configured gcloud."
 }
 
@@ -174,7 +174,7 @@ function start_vm {
 
   RUNNER_TOKEN=$(curl -S -s -XPOST \
       -H "authorization: Bearer ${token}" \
-      https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token |\
+      "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token" |\
       jq -r .token)
   echo "✅ Successfully got the GitHub Runner registration token"
 
@@ -188,9 +188,8 @@ function start_vm {
   preemptible_flag=$([[ "${preemptible}" == "true" ]] && echo "--preemptible" || echo "")
   ephemeral_flag=$([[ "${ephemeral}" == "true" ]] && echo "--ephemeral" || echo "")
   no_external_address_flag=$([[ "${no_external_address}" == "true" ]] && echo "--no-address" || echo "")
-  network_flag=$([[ ! -z "${network}"  ]] && echo "--network=${network}" || echo "")
-  subnet_flag=$([[ ! -z "${subnet}"  ]] && echo "--subnet=${subnet}" || echo "")
-  accelerator=$([[ ! -z "${accelerator}"  ]] && echo "--accelerator=${accelerator} --maintenance-policy=TERMINATE" || echo "")
+  subnet_flag=$([[ -n "${subnet}"  ]] && echo "--subnet=${subnet}" || echo "")
+  accelerator=$([[ -n "${accelerator}"  ]] && echo "--accelerator=${accelerator} --maintenance-policy=TERMINATE" || echo "")
   maintenance_policy_flag=$([[ -z "${maintenance_policy_terminate}"  ]] || echo "--maintenance-policy=TERMINATE" )
 
   echo "The new GCE VM will be ${VM_ID}"
@@ -224,7 +223,7 @@ function start_vm {
 	EOF
 
 	# See: https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/running-scripts-before-or-after-a-job
-	echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/usr/bin/gce_runner_shutdown.sh" >.env
+	echo 'ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/usr/bin/gce_runner_shutdown.sh' >.env
 	gcloud compute instances add-labels ${VM_ID} --zone=${machine_zone} --labels=gh_ready=0 && \\
 	RUNNER_ALLOW_RUNASROOT=1 ./config.sh --url https://github.com/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN} --labels ${VM_ID} --unattended ${ephemeral_flag} --disableupdate && \\
 	./svc.sh install && \\
@@ -290,28 +289,28 @@ function start_vm {
   gh_repo="$(truncate_to_label "${GITHUB_REPOSITORY##*/}")"
   gh_run_id="${GITHUB_RUN_ID}"
 
-  gcloud compute instances create ${VM_ID} \
-    --zone=${machine_zone} \
-    ${disk_size_flag} \
-    ${boot_disk_type_flag} \
-    --machine-type=${machine_type} \
-    --scopes=${scopes} \
-    ${service_account_flag} \
-    ${image_project_flag} \
-    ${image_flag} \
-    ${image_family_flag} \
-    ${preemptible_flag} \
-    ${no_external_address_flag} \
-    ${subnet_flag} \
-    ${accelerator} \
-    ${maintenance_policy_flag} \
+  gcloud compute instances create "${VM_ID}" \
+    --zone="${machine_zone}" \
+    "${disk_size_flag}" \
+    "${boot_disk_type_flag}" \
+    --machine-type="${machine_type}" \
+    --scopes="${scopes}" \
+    "${service_account_flag}" \
+    "${image_project_flag}" \
+    "${image_flag}" \
+    "${image_family_flag}" \
+    "${preemptible_flag}" \
+    "${no_external_address_flag}" \
+    "${subnet_flag}" \
+    "${accelerator}" \
+    "${maintenance_policy_flag}" \
     --labels=gh_ready=0,gh_repo_owner="${gh_repo_owner}",gh_repo="${gh_repo}",gh_run_id="${gh_run_id}" \
     --metadata=startup-script="$startup_script" \
-    && echo "label=${VM_ID}" >> $GITHUB_OUTPUT
+    && echo "label=${VM_ID}" >> "$GITHUB_OUTPUT"
 
   safety_off
   while (( i++ < 60 )); do
-    GH_READY=$(gcloud compute instances describe ${VM_ID} --zone=${machine_zone} --format='json(labels)' | jq -r .labels.gh_ready)
+    GH_READY=$(gcloud compute instances describe "${VM_ID}" --zone="${machine_zone}" --format='json(labels)' | jq -r .labels.gh_ready)
     if [[ $GH_READY == 1 ]]; then
       break
     fi
@@ -322,7 +321,7 @@ function start_vm {
     echo "✅ ${VM_ID} ready ..."
   else
     echo "Waited 5 minutes for ${VM_ID}, without luck, deleting ${VM_ID} ..."
-    gcloud --quiet compute instances delete ${VM_ID} --zone=${machine_zone}
+    gcloud --quiet compute instances delete "${VM_ID}" --zone="${machine_zone}"
     exit 1
   fi
 }
