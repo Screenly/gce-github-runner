@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+IFS=$'\t\n'
+
 ACTION_DIR="$( cd $( dirname "${BASH_SOURCE[0]}" ) >/dev/null 2>&1 && pwd )"
 
 function usage {
@@ -141,7 +144,7 @@ do
       ;;
     accelerator)
       accelerator=$OPTLARG
-      ;;      
+      ;;
     h|help)
       usage
       exit 0
@@ -249,7 +252,7 @@ function start_vm {
       cd /actions-runner
       curl -o actions-runner-linux-arm64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-arm64-${runner_ver}.tar.gz
       tar xzf ./actions-runner-linux-arm64-${runner_ver}.tar.gz
-      ./bin/installdependencies.sh && \\
+      sudo ./bin/installdependencies.sh && \\
       $startup_script"
     else
       startup_script="#!/bin/bash
@@ -257,11 +260,11 @@ function start_vm {
       cd /actions-runner
       curl -o actions-runner-linux-x64-${runner_ver}.tar.gz -L https://github.com/actions/runner/releases/download/v${runner_ver}/actions-runner-linux-x64-${runner_ver}.tar.gz
       tar xzf ./actions-runner-linux-x64-${runner_ver}.tar.gz
-      ./bin/installdependencies.sh && \\
+      sudo ./bin/installdependencies.sh && \\
       $startup_script"
     fi
   fi
-  
+
   # GCE VM label values requirements:
   # - can contain only lowercase letters, numeric characters, underscores, and dashes
   # - have a maximum length of 63 characters
@@ -273,7 +276,7 @@ function start_vm {
   #   - All characters must be either a hyphen (-) or alphanumeric
   # - repository name
   #   - Max length: 100 code points
-  #   - All code points must be either a hyphen (-), an underscore (_), a period (.), 
+  #   - All code points must be either a hyphen (-), an underscore (_), a period (.),
   #     or an ASCII alphanumeric code point
   # ref: https://github.com/dead-claudia/github-limits
   function truncate_to_label {
