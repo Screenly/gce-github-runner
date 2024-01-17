@@ -154,9 +154,8 @@ do
   esac
 done
 
-set -euo pipefail
+set -xeuo pipefail
 IFS=$'\t\n'
-
 
 function gcloud_auth {
   # NOTE: when --project is specified, it updates the config
@@ -173,10 +172,11 @@ function start_vm {
     gcloud_auth
   fi
 
-  RUNNER_TOKEN=$(curl -S -s -XPOST \
+  curl -S -s -XPOST \
       -H "authorization: Bearer ${token}" \
-      "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token" |\
-      jq -r .token)
+      "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners/registration-token" >> /tmp/tag.json
+  cat /tmp/tag.json
+  RUNNER_TOKEN=$(jq -r .token < tag.json)
   echo "✅ Successfully got the GitHub Runner registration token"
 
   VM_ID="gce-gh-runner-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
