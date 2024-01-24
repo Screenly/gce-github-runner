@@ -79,7 +79,7 @@ function start_vm {
   gh_repo="$(truncate_to_label "${GITHUB_REPOSITORY##*/}")"
   gh_run_id="${GITHUB_RUN_ID}"
 
-  gcloud compute instances instance-groups managed create-instance "$mig" --name "${VM_ID}" \
+  gcloud compute instance-groups managed create-instance "$mig" --name "${VM_ID}" \
     && echo "label=${VM_ID}" >> "$GITHUB_OUTPUT"
 
   safety_off
