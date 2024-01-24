@@ -14,8 +14,8 @@ inputs:
   mig:
     description: "Managed instance group name to create the machine in."
     required: true
-  region:
-    description: "The region where to create the VM in."
+  zone:
+    description: "The zone where to create the VM in."
     required: true
 
 outputs:
@@ -32,5 +32,5 @@ runs:
         ${{ github.action_path }}/action.sh
         --arm=${{ inputs.arm }}
         --mig=${{ inputs.mig }}
-        --region=${{ inputs.region }}
+        --zone=${{ inputs.zone }}
       shell: bash
