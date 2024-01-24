@@ -17,6 +17,7 @@ function safety_off {
 source "${ACTION_DIR}/vendor/getopts_long.sh"
 
 arm=
+region=
 mig=
 
 OPTLIND=1
