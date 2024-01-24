@@ -32,4 +32,5 @@ runs:
         ${{ github.action_path }}/action.sh
         --arm=${{ inputs.arm }}
         --mig=${{ inputs.mig }}
+        --region=${{ inputs.region }}
       shell: bash
