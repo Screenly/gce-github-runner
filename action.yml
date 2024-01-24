@@ -14,6 +14,10 @@ inputs:
   mig:
     description: "Managed instance group name to create the machine in."
     required: true
+  region:
+    description: "The region where to create the VM in."
+    required: true
+
 outputs:
   label:
     description: >-
