@@ -7,98 +7,13 @@ branding:
   icon: triangle
   color: purple
 inputs:
-  token:
-    description: >-
-      GitHub auth token, needs `repo`/`public_repo` scope: https://docs.github.com/en/rest/reference/actions#self-hosted-runners.
-    required: true
-  project_id:
-    description: >-
-      ID of the Google Cloud Platform project. If provided, this will configure gcloud to use this project ID.
-    required: false
-  service_account_key:
-    description: >-
-      The service account key which will be used for authentication credentials.
-      This key should be created and stored as a secret. Should be JSON key.
-    required: false
-  runner_ver:
-    description: Version of the GitHub Runner. "latest" will resolve the latest version.
-    default: "latest"
-    required: true
-  machine_zone:
-    description: GCE zone
-    default: "us-east1-c"
-    required: true
-  machine_type:
-    description: GCE machine type; https://cloud.google.com/compute/docs/machine-types
-    default: "n1-standard-4"
-    required: true
-  disk_size:
-    description: VM disk size.
-    required: false
-  network:
-    description: Specifies the network that the VM instances are a part of.
-    required: false
-  subnet:
-    description: Specifies the subnet that the VM instances are a part of (must be part of network).
-    required: false
-  accelerator:
-    description: >
-      [count=COUNT],[type=TYPE]
-        Attaches accelerators (e.g. GPUs) to the instances.
-        TYPE
-        The specific type (e.g. nvidia-tesla-k80 for nVidia Tesla K80) of accelerator 
-        to attach to the instances. Use 'gcloud compute accelerator-types list' to 
-        learn about all available accelerator types.
-        COUNT
-        Number of accelerators to attach to each instance. The default value is 1.
-    required: false
-  runner_service_account:
-    description: Service account of the VM, defaults to default compute service account.
-    required: false
-  image_project:
-    description: >
-      The Google Cloud project against which all image and image family
-      references will be resolved.
-    required: false
-  image:
-    description: Specifies the name of the image that the disk will be initialized with.
-    required: false
-  image_family:
-    description: The image family for the operating system that the boot disk will be initialized with.
-    required: false
-  preemptible:
-    description: Use GCE preemptible VM instance; https://cloud.google.com/compute/docs/instances/preemptible
-    default: false
-    required: true
-  ephemeral:
-    description: Set GitHub runner to be ephemeral; https://docs.github.com/en/actions/hosting-your-own-runners/autoscaling-with-self-hosted-runners#using-ephemeral-runners-for-autoscaling
-    default: false
-    required: true
-  no_external_address:
-    description: Disables external IP address for the worker
-    default: false
-    required: true
-  scopes:
-    description: Scopes granted to the VM, defaults to full access (cloud-platform).
-    default: cloud-platform
-    required: true
-  shutdown_timeout:
-    description: "Shutdown grace period (in seconds)."
-    default: 30
-    required: true
-  actions_preinstalled:
-    description: "Whether the GitHub actions have already been installed at `/actions-runner`."
-    default: false
-    required: true
   arm:
     description: "Whether the GitHub actions should use arm64 binaries."
     default: false
     required: false
-  maintenance_policy_terminate:
-    description: "Set Google maintenance policy to TERMINATE.  This is required for GPUs as they do ot support live-migration."
-  boot_disk_type:
-    description: "Boot disk type for the GCE instance (https://cloud.google.com/sdk/gcloud/reference/compute/disk-types/list)"
-    required: false
+  mig:
+    description: "Managed instance group name to create the machine in."
+    required: true
 outputs:
   label:
     description: >-
@@ -111,28 +26,6 @@ runs:
     - id: gce-github-runner-script
       run: >
         ${{ github.action_path }}/action.sh
-        --command=start
-        --token=${{ inputs.token }}
-        --project_id=${{ inputs.project_id }}
-        --service_account_key='${{ inputs.service_account_key }}'
-        --runner_ver=${{ inputs.runner_ver }}
-        --machine_zone=${{ inputs.machine_zone }}
-        --machine_type=${{ inputs.machine_type }}
-        --network=${{ inputs.network }}
-        --subnet=${{ inputs.subnet }}
-        --accelerator=${{ inputs.accelerator }}
-        --disk_size=${{ inputs.disk_size }}
-        --scopes=${{ inputs.scopes }}
-        --shutdown_timeout=${{ inputs.shutdown_timeout }}
-        --runner_service_account=${{ inputs.runner_service_account }}
-        --image_project=${{ inputs.image_project }}
-        --image=${{ inputs.image }}
-        --image_family=${{ inputs.image_family }}
-        --boot_disk_type=${{ inputs.boot_disk_type }}
-        --preemptible=${{ inputs.preemptible }}
-        --ephemeral=${{ inputs.ephemeral }}
-        --no_external_address=${{ inputs.no_external_address }}
-        --actions_preinstalled=${{ inputs.actions_preinstalled }}
-        --maintenance_policy_terminate=${{ inputs.maintenance_policy_terminate }}
         --arm=${{ inputs.arm }}
+        --mig=${{ inputs.mig }}
       shell: bash
